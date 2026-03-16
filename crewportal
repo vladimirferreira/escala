@@ -1,0 +1,84 @@
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+# Configuração do arquivo
+file_path = "Escala_Azul_Crew_Portal.pdf"
+doc = SimpleDocTemplate(file_path, pagesize=(21*cm, 29.7*cm), leftMargin=1*cm, rightMargin=1*cm)
+styles = getSampleStyleSheet()
+
+# [span_1](start_span)Estilos Customizados - Padrão Azul[span_1](end_span)
+azul_royal = colors.HexColor("#00519E")
+azul_marinho = colors.HexColor("#021F42")
+cinza_claro = colors.HexColor("#F2F2F2")
+
+styles.add(ParagraphStyle(name='AzulTitle', parent=styles['Title'], textColor=azul_royal, alignment=TA_LEFT, fontSize=18))
+styles.add(ParagraphStyle(name='AzulSub', parent=styles['Normal'], textColor=azul_marinho, fontSize=10, spaceAfter=12))
+
+# Cabeçalho do Protótipo
+elements = []
+elements.append(Paragraph("Azul Linhas Aéreas - Crew Connection", styles['AzulTitle']))
+elements.append(Paragraph("Escala Mensal de Voos | Crew Rostering System", styles['AzulSub']))
+elements.append(Spacer(1, 0.5*cm))
+
+# [span_2](start_span)Dados da Tripulação (Baseado no fluxo Pages/Navigation)[span_2](end_span)
+info_data = [
+    ["Tripulante:", "JOÃO SILVA", "Base:", "VCP (Campinas)"],
+    ["Cargo:", "First Officer", "Frota:", "A320neo / A321"],
+    ["Período:", "18 MAR – 18 APR", "Status:", "Publicada"]
+]
+info_table = Table(info_data, colWidths=[3*cm, 6*cm, 3*cm, 6*cm])
+info_table.setStyle(TableStyle([
+    ('TEXTCOLOR', (0,0), (-1,-1), azul_marinho),
+    ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+]))
+elements.append(info_table)
+elements.append(Spacer(1, 1*cm))
+
+# Dados da Escala
+rows = [
+    ("18 MAR","TRP1001","AD4052","VCP-CNF","05:30","07:25",1.3,"A20N"),
+    ("18 MAR","TRP1001","AD4057","CNF-VCP","08:15","10:45",1.3,"A20N"),
+    ("19 MAR","TRP1001","AD4930","VCP-REC","12:30","16:30",3.0,"A21N"),
+    ("20 MAR","TRP1001","REST","REC Layover","—","—",0,"—"),
+    ("21 MAR","TRP1001","AD4931","REC-VCP","06:20","10:30",3.1,"A21N"),
+    ("24 MAR","TRP1002","AD4204","VCP-SSA","07:40","10:10",2.1,"A20N"),
+    ("25 MAR","TRP1002","AD4412","VCP-POA","06:00","09:40",2.2,"A21N"),
+    ("27 MAR","TRP1002","AD4413","POA-VCP","07:30","11:15",2.2,"A21N"),
+]
+
+# [span_3](start_span)Tabela de Voos com DesignTokens.json[span_3](end_span)
+table_data = [["DATA", "TRIP ID", "VOO", "TRECHO", "APRES.", "CORTE", "BLOCK", "ACFT"]]
+for r in rows:
+    table_data.append(list(r))
+
+main_table = Table(table_data, colWidths=[2.2*cm, 2.5*cm, 2.2*cm, 3.5*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2*cm])
+
+main_table.setStyle(TableStyle([
+    ('BACKGROUND', (0,0)[span_4](start_span), (-1,0), azul_royal), # Cor Primária[span_4](end_span)
+    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    ('FONTSIZE', (0,0), (-1,-1), 9),
+    ('ROWBACKGROUNDS', (0,1)[span_5](start_span), (-1,-1), [colors.white, cinza_claro]), # Zebrado para leitura clara[span_5](end_span)
+    ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+]))
+
+elements.append(main_table)
+elements.append(Spacer(1, 1*cm))
+
+# Totais e Notas Finais
+total_block = sum(r[6] for r in rows)
+summary_text = f"<b>Total de Horas (Block):</b> {round(total_block, 1)}h | <b>FDP Evaluated:</b> RBAC 117 compliant"
+elements.append(Paragraph(summary_text, styles['Normal']))
+
+# Footer Institucional
+elements.append(Spacer(1, 2*cm))
+elements.append(Paragraph("Gerado via Figma Tokens - Azul Crew Rostering Prototype", styles['Italic']))
+
+# Build
+doc.build(elements)
